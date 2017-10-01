@@ -191,13 +191,18 @@ var nouveau = function(){
 	
 	if(briques[posBriqueV] !== undefined && briques[posBriqueV][posBriqueH] !== undefined){
 	    
-	    /*if(balleTop+"px" < briques[posBriqueV][posBriqueH].marginTop || balleTop+"px" >= briques[posBriqueV][posBriqueH].marginTop+h)
-		monte = -monte
+	    if((balleLeft+5)+"px" <= briques[posBriqueV][posBriqueH].style.marginLeft || (balleLeft-parseInt(briques[posBriqueV][posBriqueH].style.width)+5)+"px" >= briques[posBriqueV][posBriqueH].style.marginLeft){
+		
+		gauche = -gauche;
+		console.log(briques[posBriqueV][posBriqueH].style.width);
+	    }
 	    else
-		gauche = -gauche;*/
-
-	    monte = -monte;
+		monte = -monte;
+	    
+	    //monte = -monte;
 	    //console.log(balleTop,briques[posBriqueV][posBriqueH].style.marginTop);
+	    /*if((balleLeft+5)+"px" <= briques[posBriqueV][posBriqueH].style.marginLeft)
+		console.log(balleLeft+5, briques[posBriqueV][posBriqueH].style.marginLeft);*/
 	    document.getElementById("jeu").removeChild(briques[posBriqueV][posBriqueH]);
 	    briques[posBriqueV][posBriqueH] = undefined;
 	    score += 5;
