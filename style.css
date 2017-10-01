@@ -1,0 +1,59 @@
+*{
+	background-color : black;
+	color : white;
+}
+
+header{
+	margin : auto;
+	text-align : center;
+}
+
+#jeu{
+	margin : auto;
+	width : 640px;
+	height : 480px;
+	border : solid white 2px;
+}
+
+#message{
+	text-align : center;
+	font-size : xx-large;
+	font-weight : bold;
+	margin-top : 200px;
+}
+
+aside{
+	width : 75px;
+	height : 480px;
+	margin-left : 10px;
+	border : solid white 2px;
+	text-align : center;
+
+}
+
+#ecran{
+	margin : auto;
+	width : 715px;
+	height : 480px;
+	display:flex;
+}
+
+#barre{
+	width : 60px;
+	height : 5px;
+	background-color : white;
+	margin-top : 465px;
+	margin-left : 290px;
+	position : absolute;
+}
+
+#balle{
+	width : 10px;
+	height : 10px;
+	background-color : white;
+	border-radius : 5px;
+	margin-left : 310px;
+	margin-top : 455px;
+	position : absolute;
+}
+
