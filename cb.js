@@ -54,10 +54,13 @@ var nouveau = function(){
     var balle = document.getElementById("balle");
     var balleLeft, balleTop;
     var ecran = document.getElementById("jeu");
-    var tBarre = 60;
+    var tBarreInit = 60;
+    var tBarre, tBalle;
     var score = 0;
     var appuie = false;
     var event;
+    var bonus = [];
+    var bonusRevealed = [false,false,false]; //Sticky SuperBall Explosive
     
     var displayVies = function(){
 	var vies = "";
@@ -83,12 +86,20 @@ var nouveau = function(){
 
     var initPos = function(){
 	appuie = false;
+	tBarre = tBarreInit;
 	balleTop = 455;
-	balleLeft = 310;
-	positionBarre = 290;
+	balleLeft = 315;
+	tBalle = 10;
+	positionBarre = 290; //Largeur
+	barre.style.width = tBarre + "px";
 	balle.style.marginTop = balleTop + "px";
 	balle.style.marginLeft = balleLeft + "px";
+	balle.style.width = tBalle + "px";
+	balle.style.height = tBalle + "px";
 	barre.style.marginLeft = positionBarre + "px";
+
+	for(var i = 0; i<bonusRevealed.length;i++)
+	    bonusRevealed[i] = false;
     };
 
     var detruireJeu = function(){
@@ -118,26 +129,32 @@ var nouveau = function(){
 
     var moveKeyboard = function(){
 	
-	//console.log(appuie);
-
 	if(appuie)
 	{
 	    e = event;
 	    if(e === 39 && positionBarre + tBarre < width+50){
 		positionBarre++;
 		barre.style.marginLeft = positionBarre + "px";
+		if(balleTop === 455){
+		    balleLeft++;
+		    balle.style.marginLeft = balleLeft + "px";
+		}
 	    }
 
 	    if(e === 37 && positionBarre > 0){
 		positionBarre--;
 		barre.style.marginLeft = positionBarre + "px";
+		if(balleTop === 455){
+		    balleLeft--;
+		    balle.style.marginLeft = balleLeft + "px";
+		}
 	    }
 	}
     }
     
 
     document.addEventListener('keydown', function(e){
-	if(start && (e.keyCode === 37 || e.keyCode === 39)){
+	if((e.keyCode === 37 || e.keyCode === 39)){
 	    event = e.keyCode;
 	    appuie = true;
 	}
@@ -168,55 +185,166 @@ var nouveau = function(){
     initJeu();
     
     var demarre = function(){
+	if(!start && !gameover && !gagne){
+	    start = true;
+	    afficheScore();
+	    monte = 1;
+	    gauche = (balleLeft+tBalle/2 - (positionBarre - (-tBarre/2)))/(tBarre/2);
+	}
+
 	if(gameover || gagne){
 	   
 	    barre.style.display = "block";
 	    balle.style.display = "block";
 	    initJeu();
 	}
-
-	if(!start){
-	    start = true;
-	    afficheScore();
-	    monte = 1;
-	    gauche = 0;
-	}
     }
     
-    ecran.addEventListener("click", demarre);    
+    ecran.addEventListener("click", demarre);
+
+    var revealBonus = function(){
+	var r = Math.floor(Math.random()*6);
+	//r = 3;
+
+	switch(r){
+	case 0:
+	    if(tBarre < 4*tBarreInit){
+		tBarre *= 2;
+		barre.style.width = tBarre+"px";
+	    }
+	    else
+		score += 10;
+	    break;
+	case 1:
+	    if(tBarre > tBarreInit/4){
+		tBarre /= 2;
+		barre.style.width = tBarre+"px";
+	    }
+	    else
+		score -= 10;
+	    break;
+	case 2:
+	    score += 50;
+	    break;
+	case 3:
+	    bonusRevealed[0] = true;
+	    break;
+	case 4:
+	    bonusRevealed[1] = true;
+	    break;
+	case 5:
+	    bonusRevealed[2] = true;
+	    break;
+	}
+	
+	
+    }
+
+    var moveBonus = function(){
+	for(var i=bonus.length-1;i>=0;i--){
+	    var pos = parseInt(bonus[i].style.marginTop)+1;
+	    
+	    
+	    bonus[i].style.marginTop = pos+"px";
+	    
+	    
+	}
+
+	if(bonus.length > 0 && parseInt(bonus[bonus.length-1].style.marginTop) >= 465)
+	{
+	    var posLeft = parseInt(bonus[bonus.length-1].style.marginLeft);
+	    if(posLeft > positionBarre && posLeft < tBarre + positionBarre)
+		revealBonus();
+	    ecran.removeChild(bonus[bonus.length-1]);
+	    bonus.pop();
+	    
+	    
+	}
+    }
+
+    var creerBonus = function(left,top){
+	var divBonus = document.createElement("div");
+	divBonus.style.marginLeft = left;
+	divBonus.style.marginTop = top;
+	divBonus.style.width = "5px";
+	divBonus.style.height = "5px";
+	divBonus.style.backgroundColor = "white";
+	divBonus.style.position = "absolute";
+	ecran.appendChild(divBonus);
+	divBonus.hasAttribute("class", "bonus");
+	bonus.unshift(divBonus);
+	
+    }
 
     var casseBrique = function(){
 	var posBriqueH = Math.floor((balleLeft+10) / ((60+width)/w));
 	var posBriqueV = Math.floor(balleTop / (height / (2*h)));
 	
 	if(briques[posBriqueV] !== undefined && briques[posBriqueV][posBriqueH] !== undefined){
-	    
-	    if((balleLeft+5)+"px" <= briques[posBriqueV][posBriqueH].style.marginLeft || (balleLeft-parseInt(briques[posBriqueV][posBriqueH].style.width)+5)+"px" >= briques[posBriqueV][posBriqueH].style.marginLeft){
-		
-		gauche = -gauche;
-		console.log(briques[posBriqueV][posBriqueH].style.width);
+	    var mLeft = parseFloat(briques[posBriqueV][posBriqueH].style.marginLeft);
+	    var mTop = parseFloat(briques[posBriqueV][posBriqueH].style.marginTop);
+
+	    if(!bonusRevealed[1]){
+		//console.log(balleLeft + 10 >= mLeft + parseFloat(briques[posBriqueV][posBriqueH].style.width))
+		if((balleTop + tBalle >= mTop && balleTop < mTop + parseFloat(briques[posBriqueV][posBriqueH].style.height)) && (balleLeft < mLeft || balleLeft + 10 >= mLeft + parseFloat(briques[posBriqueV][posBriqueH].style.width))){
+		    
+		    gauche = -gauche;
+		}
+		else
+		    monte = -monte;
 	    }
-	    else
-		monte = -monte;
 	    
-	    //monte = -monte;
-	    //console.log(balleTop,briques[posBriqueV][posBriqueH].style.marginTop);
-	    /*if((balleLeft+5)+"px" <= briques[posBriqueV][posBriqueH].style.marginLeft)
-		console.log(balleLeft+5, briques[posBriqueV][posBriqueH].style.marginLeft);*/
-	    document.getElementById("jeu").removeChild(briques[posBriqueV][posBriqueH]);
+	    ecran.removeChild(briques[posBriqueV][posBriqueH]);
 	    briques[posBriqueV][posBriqueH] = undefined;
+
+	    if(bonusRevealed[2])
+	    {
+		if(briques[posBriqueV][posBriqueH+1] != undefined)
+		{
+		    ecran.removeChild(briques[posBriqueV][posBriqueH+1]);
+		    briques[posBriqueV][posBriqueH+1] = undefined;
+		    --nbBriques;
+		}
+
+		if(briques[posBriqueV][posBriqueH-1] != undefined)
+		{
+		    ecran.removeChild(briques[posBriqueV][posBriqueH-1]);
+		    briques[posBriqueV][posBriqueH-1] = undefined;
+		    --nbBriques;
+		}
+
+		if(briques[posBriqueV+1] != undefined && briques[posBriqueV+1][posBriqueH] != undefined)
+		{
+		    ecran.removeChild(briques[posBriqueV+1][posBriqueH]);
+		    briques[posBriqueV+1][posBriqueH] = undefined;
+		    --nbBriques;
+		}
+
+		if(briques[posBriqueV-1] != undefined && briques[posBriqueV-1][posBriqueH] != undefined)
+		{
+		    ecran.removeChild(briques[posBriqueV-1][posBriqueH]);
+		    briques[posBriqueV-1][posBriqueH] = undefined;
+		    --nbBriques;
+		}
+
+		score += 10;
+	    }
+	    
 	    score += 5;
 	    
 	    
 
-	    if(--nbBriques === 0){
+	    if(--nbBriques <= 0){
 		score += 50;
 		start = false;
 		gagne = true;
-		initPos();
+		afficheMessage("VICTOIRE !");
 		barre.style.display = "none";
 		balle.style.display = "none";
-		afficheMessage("VICTOIRE !");
+		initPos();
+	    }
+	    else if(!(Math.floor(Math.random()*4))){
+		creerBonus(mLeft,mTop);
 	    }
 
 	    afficheScore();	
@@ -227,14 +355,20 @@ var nouveau = function(){
 	balleTop -= monte;
 	balle.style.marginTop = balleTop+"px";
 	
-	if(balleTop === 0 || balleTop === 455 && balleLeft + 10 >= positionBarre && balleLeft < positionBarre + tBarre){
+	if(balleTop === 0){
 	    monte = -monte;
+	}
+
+	if(balleTop === 455 && balleLeft + 10 >= positionBarre && balleLeft < positionBarre + tBarre){
+	    monte = -monte;
+	    if(bonusRevealed[0])
+		start = false;
 	}
     };
 
     var mvtHBalle = function(){
-	if(balleTop === 455){
-	    
+	if(balleTop === 455 && balleLeft + 10 >= positionBarre && balleLeft < positionBarre + tBarre){
+	    /*
 	    if(balleLeft + 10 >= positionBarre && balleLeft < positionBarre + tBarre/3){
 		
 		gauche = -1;
@@ -244,15 +378,23 @@ var nouveau = function(){
 	    }
 	    else if(balleLeft + 10 >= positionBarre + tBarre*2/3 && balleLeft < positionBarre + tBarre){
 		gauche = 1;
-	    }
+		}*/
+	    gauche = (balleLeft+tBalle/2 - (positionBarre - (-tBarre/2)))/(tBarre/2);
 	};
 	
-	if(balleLeft === 0 || balleLeft === width+39){
+	if(balleLeft <= 0 || balleLeft >= width+39){
 	    gauche = -gauche;
 	}
 
 	balleLeft += gauche;
 	balle.style.marginLeft = balleLeft+"px";
+    }
+
+    var detruireBonus = function(){
+	for(var i=bonus.length -1;i>=0;i--){
+	    ecran.removeChild(bonus[i]);
+	    bonus.pop();
+	}
     }
 
     var checkDead = function(){
@@ -264,6 +406,8 @@ var nouveau = function(){
 
 	    displayVies();
 
+	    detruireBonus();
+
 	    if(nbVies === 0){
 		gameover = true;
 		score = 0;
@@ -271,7 +415,7 @@ var nouveau = function(){
 		afficheMessage("GAMEOVER");
 		barre.style.display = "none";
 		balle.style.display = "none";
-		initPos();
+		//initPos();
 	    }
 	}
     };
@@ -281,14 +425,18 @@ var nouveau = function(){
     var jeu = function(){
 	if(start){
 	    casseBrique();
-	    
-	    mvtVBalle();
-	    
-	    mvtHBalle();
 
-	    checkDead();
+	    if(start)
+	    {
+		mvtVBalle();
+		
+		mvtHBalle();
+		
+		checkDead();
+	    }
 	}
     };
     setInterval(jeu,1);
     setInterval(moveKeyboard,1);
+    setInterval(moveBonus,1);
 })();
