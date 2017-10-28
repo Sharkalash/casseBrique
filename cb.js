@@ -257,8 +257,6 @@ var nouveau = function(){
 		revealBonus();
 	    ecran.removeChild(bonus[bonus.length-1]);
 	    bonus.pop();
-	    
-	    
 	}
     }
 
